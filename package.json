@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/amnotafraid/magento2-client.git"
+    "url": "git+https://github.com/ismailkm/magento2-client.git"
   },
   "keywords": [
     "Magento2",
@@ -18,11 +18,11 @@
     "Node.js",
     "REST"
   ],
-  "author": "Bessie Malek",
+  "author": "Ismail Khan",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/amnotafraid/magento2-client/issues"
+    "url": "https://github.com/ismailkm/magento2-client/issues"
   },
-  "homepage": "https://github.com/amnotafraid/magento2-client#readme",
+  "homepage": "https://github.com/ismailkm/magento2-client#readme",
   "dependencies": {}
 }

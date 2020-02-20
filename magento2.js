@@ -6,7 +6,7 @@ const http = require('http');
 const https = require('https');
 
 const DEFAULT_PORT = 80;
-const DEFAULT_VERSION = 'V1'
+const DEFAULT_VERSION = 'V1';
 
 /**
  * getLocation
@@ -17,19 +17,22 @@ const DEFAULT_VERSION = 'V1'
  * @param string href
  */
 function getLocation(href) {
-		let match = href.match(/^(https|http)?\:\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/);
-		return match && {
-				href: href,
-				protocol: match[1],
-				host: match[2],
-				hostname: match[3],
-				port: match[4],
-				pathname: match[5],
-				search: match[6],
-				hash: match[7]
-		}
-
-};
+  let match = href.match(
+    /^(https|http)?\:\/\/(([^:\/?#]*)(?:\:([0-9]+))?)([\/]{0,1}[^?#]*)(\?[^#]*|)(#.*|)$/
+  );
+  return (
+    match && {
+      href: href,
+      protocol: match[1],
+      host: match[2],
+      hostname: match[3],
+      port: match[4],
+      pathname: match[5],
+      search: match[6],
+      hash: match[7]
+    }
+  );
+}
 
 /**
  * Magento2 constructor
@@ -39,10 +42,14 @@ function getLocation(href) {
  * @param	string adminPassword
  * @param	object options
  */
-var Magento2 = function(baseUrl, adminUsername, adminPassword, options) {
-	if (baseUrl) {
-		this.init(baseUrl, adminUsername, adminPassword, options);
-	}
+var Magento2 = function(params, type='account') {
+  if (params.baseUrl) {
+    if(type=='account'){
+      this.init(params);
+    }else{
+      this.initToken(params);
+    }
+  }
 };
 
 /**
@@ -53,40 +60,109 @@ var Magento2 = function(baseUrl, adminUsername, adminPassword, options) {
  * @param	string adminPassword
  * @param	object options
  */
-Magento2.prototype.init = function(baseUrl, adminUsername, adminPassword, options) {
-	options = options || {};
-	let location = getLocation(baseUrl);
+Magento2.prototype.init = function(
+  {
+  baseUrl,
+  adminUsername,
+  adminPassword,
+  options
+  }
+) {
+  options = options || {};
+  let location = getLocation(baseUrl);
 
-	if (location.protocol !== 'https') {
-		console.log("WARNING! live Magento installs should have https protocol");
-	}
+  if (location.protocol !== 'https') {
+    console.log('WARNING! live Magento installs should have https protocol');
+  }
 
-	this.params = {
-		baseUrl: baseUrl,
-		protocol: (location.protocol == 'https' ? https : http),
-		host: location.host,
-		path: location.pathname,
-		port: options.port || DEFAULT_PORT,
-		adminUsername: adminUsername,
-		adminPassword: adminPassword,
-		token: options.token || '',
-		version: options.version || DEFAULT_VERSION,
-		rejectUnauthorized: options.rejectUnauthorized && true
-	};
+  http.globalAgent.defaultPort = options.port || DEFAULT_PORT;
 
-	if (!this.params.rejectUnauthorized) {
-	console.log("WARNING! Options sent are allowing for SSL communication using self signed certificates");
-	}
+  this.params = {
+    baseUrl: baseUrl,
+    protocol: location.protocol == 'https' ? https : http,
+    host: location.host,
+    path: location.pathname,
+    port: options.port || DEFAULT_PORT,
+    adminUsername: adminUsername,
+    adminPassword: adminPassword,
+    token: '',
+    version: options.version || DEFAULT_VERSION,
+    rejectUnauthorized: options.rejectUnauthorized && true
+  };
 
-	if (!this.params.baseUrl) {
-		throw new Error('Magento2 `baseUrl` of Magento site is required to initialize');
-	}
-	if (!this.params.adminUsername) {
-		throw new Error('Magento2 `adminUsername` of Magento site is required to initialize');
-	}
-	if (!this.params.adminPassword) {
-		throw new Error('Magento2 `adminPassword` of Magento site is required to initialize');
-	}
+  if (!this.params.rejectUnauthorized) {
+    console.log(
+      'WARNING! Options sent are allowing for SSL communication using self signed certificates'
+    );
+  }
+
+  if (!this.params.baseUrl) {
+    throw new Error(
+      'Magento2 `baseUrl` of Magento site is required to initialize'
+    );
+  }
+  if (!this.params.adminUsername) {
+    throw new Error(
+      'Magento2 `adminUsername` of Magento site is required to initialize'
+    );
+  }
+  if (!this.params.adminPassword) {
+    throw new Error(
+      'Magento2 `adminPassword` of Magento site is required to initialize'
+    );
+  }
+};
+
+/**
+ * Initialize client based on Token
+ *
+ * @param	string baseUrl
+ * @param	string token
+ * @param	object options
+ */
+Magento2.prototype.initToken = function(
+  {
+  baseUrl,
+  token,
+  options
+  }
+) {
+  options = options || {};
+  let location = getLocation(baseUrl);
+
+  if (location.protocol !== 'https') {
+    console.log('WARNING! live Magento installs should have https protocol');
+  }
+
+  http.globalAgent.defaultPort = options.port || DEFAULT_PORT;
+
+  this.params = {
+    baseUrl: baseUrl,
+    protocol: location.protocol == 'https' ? https : http,
+    host: location.host,
+    path: location.pathname,
+    port: options.port || DEFAULT_PORT,
+    token: token,
+    version: options.version || DEFAULT_VERSION,
+    rejectUnauthorized: options.rejectUnauthorized && true
+  };
+
+  if (!this.params.rejectUnauthorized) {
+    console.log(
+      'WARNING! Options sent are allowing for SSL communication using self signed certificates'
+    );
+  }
+
+  if (!this.params.baseUrl) {
+    throw new Error(
+      'Magento2 `baseUrl` of Magento site is required to initialize'
+    );
+  }
+  if (!this.params.token) {
+    throw new Error(
+      'Magento2 `token` of Magento site is required to initialize'
+    );
+  }
 };
 
 /**
@@ -94,8 +170,8 @@ Magento2.prototype.init = function(baseUrl, adminUsername, adminPassword, option
  *
  */
 Magento2.prototype.getBaseUrl = function() {
-	return this.params.baseUrl;
-}
+  return this.params.baseUrl;
+};
 /**
  * Magento2 request handler
  *
@@ -106,127 +182,137 @@ Magento2.prototype.getBaseUrl = function() {
  * @param	function callback
  */
 Magento2.prototype.request = function(method, url, urlParams, data, callback) {
-	let self = this;
-	let totalUrl = self.params.path + '/rest';
-	let urlParamString = '';
+  let self = this;
+  let totalUrl = self.params.path + '/rest';
+  let urlParamString = '';
 
-	if (Object.keys(urlParams).length > 0) {
-		urlParamString += Object.keys(urlParams).map(function(k) {
-			return encodeURIComponent(k) + '=' + encodeURIComponent(urlParams[k]);
-		}).join('&');
-	}
+  if (Object.keys(urlParams).length > 0) {
+    urlParamString += Object.keys(urlParams)
+      .map(function(k) {
+        return encodeURIComponent(k) + '=' + encodeURIComponent(urlParams[k]);
+      })
+      .join('&');
+  }
 
-	if (typeof(data) === 'string'){
-		console.log('WARNING! data parameter was passed as a string but a JSON object was expected.	Attempting to convert to JSON');
-		data = JSON.parse(data);
-	}
+  if (typeof data === 'string') {
+    console.log(
+      'WARNING! data parameter was passed as a string but a JSON object was expected.	Attempting to convert to JSON'
+    );
+    data = JSON.parse(data);
+  }
 
-	totalUrl += url;
+  totalUrl += url;
 
-	if (urlParamString.length > 0) {
-		totalUrl += '?';
-		totalUrl += urlParamString;
-	}
+  if (urlParamString.length > 0) {
+    totalUrl += '?';
+    totalUrl += urlParamString;
+  }
 
-	let aPromises = self.promisifyData(data);
+  let aPromises = self.promisifyData(data);
 
-	if (aPromises.length) {
-		return Promise.all(aPromises).bind(this).then(function() {
-			this.request(method, url, urlParams, data, callback);
-		});
-	}
+  if (aPromises.length) {
+    return Promise.all(aPromises)
+      .bind(this)
+      .then(function() {
+        this.request(method, url, urlParams, data, callback);
+      });
+  }
 
-	let req;
+  let req;
 
-	if (callback) {
-		self.getTokenCallback(function (err) {
-			if (err) {
-				callback(err);
-			}
-			let options = {
-				host: self.params.host,
-				path: totalUrl,
-				method: method,
-				rejectUnauthorized: self.params.rejectUnauthorized,
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization' : 'Bearer ' + self.params.token,
-				}
-			};
+  if (callback) {
+    self.getTokenCallback(function(err) {
+      if (err) {
+        callback(err);
+      }
+      let options = {
+        host: self.params.host,
+        path: totalUrl,
+        method: method,
+        rejectUnauthorized: self.params.rejectUnauthorized,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + self.params.token
+        }
+      };
 
-			req = self.params.protocol.request(options,
-				function(res) {
-					let response = '';
-					res.on('data', function (chunk) {
-						response += chunk;
-					});
-					res.on('end', function() {
-						if (res.statusCode === 200) {
-							callback(null, JSON.parse(response));
-						}
-						else {
-							let errResponse = response;
-					try {
+      req = self.params.protocol.request(options, function(res) {
+        let response = '';
+        res.on('data', function(chunk) {
+          response += chunk;
+        });
+        res.on('end', function() {
+          if (res.statusCode === 200) {
+            callback(null, JSON.parse(response));
+          } else {
+            let errResponse = response;
+            try {
+              errResponse = {
+                message: JSON.parse(response).message
+              };
+
+              console.log(response);
+              /*
 						errResponse = "Message: " + JSON.parse(response).message + " Parameters: " + JSON.stringify(JSON.parse(response).parameters);
-					} catch (e) {
-						console.log("Non JSON response from Magento.");
-					}
-							callback(errResponse);
-						}
-					});
-				});
+                       */
+            } catch (e) {
+              console.log('Non JSON response from Magento.');
+            }
+            callback(errResponse);
+          }
+        });
+      });
 
-			req.on('error', function(e) {
-				callback(e.message);
-			});
+      req.on('error', function(e) {
+        callback(e.message);
+      });
 
-			req.write(JSON.stringify(data));
-			req.end();
-		});
-	}
-	else {
-		return self.getTokenPromise ().then(() => {
-			return new Promise(function (resolve, reject) {
-				let options = {
-					host: self.params.host,
-					path: totalUrl,
-					method: method,
-					rejectUnauthorized: self.params.rejectUnauthorized,
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization' : 'Bearer ' + self.params.token,
-					}
-				};
+      req.write(JSON.stringify(data));
+      req.end();
+    });
+  } else {
+    return self
+      .getTokenPromise()
+      .then(() => {
+        return new Promise(function(resolve, reject) {
+          let options = {
+            host: self.params.host,
+            path: totalUrl,
+            method: method,
+            rejectUnauthorized: self.params.rejectUnauthorized,
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer ' + self.params.token
+            }
+          };
 
-				req = self.params.protocol.request(options, function(res) {
-					let response = '';
-					res.on('data', function (chunk) {
-						response += chunk;
-					});
-					res.on('end', function() {
-						if (res.statusCode === 200) {
-							resolve(JSON.parse(response));
-						}
-						else {
-							reject(response.message);
-						}
-					});
-				});
+          req = self.params.protocol.request(options, function(res) {
+            let response = '';
+            res.on('data', function(chunk) {
+              response += chunk;
+            });
+            res.on('end', function() {
+              if (res.statusCode === 200) {
+                resolve(JSON.parse(response));
+              } else {
+                reject(response.message);
+              }
+            });
+          });
 
-				req.on('error', function(e) {
-					reject(e.message);
-				});
+          req.on('error', function(e) {
+            reject(e.message);
+          });
 
-				req.write(JSON.stringify(data));
-				req.end();
-			});
-		})
-		.catch((err) => {
-			console.log(err);
-		});
-	}
+          req.write(JSON.stringify(data));
+          req.end();
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  }
 };
-
 
 /**
  * Resolve and return promises array from data
@@ -236,36 +322,36 @@ Magento2.prototype.request = function(method, url, urlParams, data, callback) {
  * @return array
  */
 Magento2.prototype.promisifyData = function(data) {
-	if (!data) {
-		return [];
-	}
+  if (!data) {
+    return [];
+  }
 
-	function thenResolvePromisedValue(data, key) {
-		data[key].then(function(val) {
-			data[key] = val;
-		});
-	}
+  function thenResolvePromisedValue(data, key) {
+    data[key].then(function(val) {
+      data[key] = val;
+    });
+  }
 
-	let promises = [];
-	if (typeof data === 'object') {
-		let keys = Object.keys(data);
-		for (let i = 0; i < keys.length; i++) {
-			let key = keys[i];
-			if (data[key] && data[key].then) {
-				promises.push(data[key]);
-				thenResolvePromisedValue(data, key);
-			}
-		}
-	} else if (data instanceof Array) {
-		for (let i = 0; i < data.length; i++) {
-			if (data[i] && data[i].then) {
-				promises.push(data[i]);
-				thenResolvePromisedValue(data, i);
-			}
-		}
-	}
+  let promises = [];
+  if (typeof data === 'object') {
+    let keys = Object.keys(data);
+    for (let i = 0; i < keys.length; i++) {
+      let key = keys[i];
+      if (data[key] && data[key].then) {
+        promises.push(data[key]);
+        thenResolvePromisedValue(data, key);
+      }
+    }
+  } else if (data instanceof Array) {
+    for (let i = 0; i < data.length; i++) {
+      if (data[i] && data[i].then) {
+        promises.push(data[i]);
+        thenResolvePromisedValue(data, i);
+      }
+    }
+  }
 
-	return promises;
+  return promises;
 };
 
 /**
@@ -274,49 +360,51 @@ Magento2.prototype.promisifyData = function(data) {
  * @param callback(err, data)
  */
 Magento2.prototype.getTokenCallback = function(callback) {
-	let self = this;
-	if (self.params.token.length > 0) {
-		callback(null);
-	}
-	else {
-		let options = {
-			host: self.params.host,
-			path: self.params.path + '/rest/' + self.params.version + '/integration/admin/token',
-			method: 'POST',
-			rejectUnauthorized: self.params.rejectUnauthorized,
-			headers: {
-				'Content-Type': 'application/json',
-			}
-		};
+  let self = this;
+  if (self.params.token.length > 0) {
+    callback(null);
+  } else {
+    let options = {
+      host: self.params.host,
+      path:
+        self.params.path +
+        '/rest/' +
+        self.params.version +
+        '/integration/admin/token',
+      method: 'POST',
+      rejectUnauthorized: self.params.rejectUnauthorized,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    };
 
-		let data = {
-			username: self.params.adminUsername,
-			password: self.params.adminPassword
-		};
+    let data = {
+      username: self.params.adminUsername,
+      password: self.params.adminPassword
+    };
 
-		let req = self.params.protocol.request(options, function(res) {
-			let response = '';
-			res.on('data', function (chunk) {
-				response += chunk;
-			});
-			res.on('end', function() {
-				if (res.statusCode === 200) {
-					self.params.token = JSON.parse(response);
-					callback(null);
-				}
-				else {
-					callback(response.message);
-				}
-			});
-		});
+    let req = self.params.protocol.request(options, function(res) {
+      let response = '';
+      res.on('data', function(chunk) {
+        response += chunk;
+      });
+      res.on('end', function() {
+        if (res.statusCode === 200) {
+          self.params.token = JSON.parse(response);
+          callback(null);
+        } else {
+          callback(response.message);
+        }
+      });
+    });
 
-		req.on('error', function(e) {
-			callback(e.message);
-		});
+    req.on('error', function(e) {
+      callback(e.message);
+    });
 
-		req.write(JSON.stringify(data));
-		req.end();
-	}
+    req.write(JSON.stringify(data));
+    req.end();
+  }
 };
 
 /**
@@ -325,51 +413,53 @@ Magento2.prototype.getTokenCallback = function(callback) {
  * @return object Promise
  */
 Magento2.prototype.getTokenPromise = function() {
-	let self = this;
-	return new Promise(function (resolve, reject) {
-		if (self.params.token.length > 0) {
-			resolve();
-		}
-		else {
-			let options = {
-				host: self.params.host,
-				path: self.params.path + '/rest/' + self.params.version + '/integration/admin/token',
-				method: 'POST',
-				rejectUnauthorized: self.params.rejectUnauthorized,
-				headers: {
-					'Content-Type': 'application/json',
-				}
-			};
+  let self = this;
+  return new Promise(function(resolve, reject) {
+    if (self.params.token.length > 0) {
+      resolve();
+    } else {
+      let options = {
+        host: self.params.host,
+        path:
+          self.params.path +
+          '/rest/' +
+          self.params.version +
+          '/integration/admin/token',
+        method: 'POST',
+        rejectUnauthorized: self.params.rejectUnauthorized,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      };
 
-			let data = {
-				username: self.params.adminUsername,
-				password: self.params.adminPassword
-			};
+      let data = {
+        username: self.params.adminUsername,
+        password: self.params.adminPassword
+      };
 
-			let req = self.params.protocol.request(options, function(res) {
-				let response = '';
-				res.on('data', function (chunk) {
-					response += chunk;
-				});
-				res.on('end', function() {
-					if (res.statusCode === 200) {
-						self.params.token = JSON.parse(response);
-						resolve();
-					}
-					else {
-						reject(response.message);
-					}
-				});
-			});
+      let req = self.params.protocol.request(options, function(res) {
+        let response = '';
+        res.on('data', function(chunk) {
+          response += chunk;
+        });
+        res.on('end', function() {
+          if (res.statusCode === 200) {
+            self.params.token = JSON.parse(response);
+            resolve();
+          } else {
+            reject(response.message);
+          }
+        });
+      });
 
-			req.on('error', function(e) {
-				reject(e.message);
-			});
+      req.on('error', function(e) {
+        reject(e.message);
+      });
 
-			req.write(JSON.stringify(data));
-			req.end();
-		}
-	});
+      req.write(JSON.stringify(data));
+      req.end();
+    }
+  });
 };
 
 /**
@@ -381,9 +471,24 @@ Magento2.prototype.getTokenPromise = function() {
  * @return object Magento2
  */
 Magento2.create = function(baseUrl, adminUsername, adminPassword, options) {
-	return new Magento2(baseUrl, adminUsername, adminPassword, options);
+  return new Magento2({baseUrl, adminUsername, adminPassword, options});
 };
+
+
+/**
+ * Magento2 based on Access token
+ *
+ * @param	string baseUrl
+ * @param	string token
+ * @param	object options
+ * @return object Magento2
+ */
+Magento2.withToken = function(baseUrl, token, options) {
+    return new Magento2({baseUrl, token, options}, type='token');
+};
+
 
 // Exports
 module.exports = Magento2;
 module.exports.createMagento2 = Magento2.create;
+module.exports.withToken = Magento2.withToken;

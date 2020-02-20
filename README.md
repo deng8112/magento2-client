@@ -1,21 +1,22 @@
-# magento2-client
+# magento2-client-nodejs
 Easily access Magento2 API
 
 ## Install with npm
 
-npm install magento2-client
+npm install magento2-client-nodejs
 
 ## Usage
 
 ### Parameters
 
-You can create a Magento2-Client with these parameters:
+You can create a magento2-client-nodejs with these parameters:
 
 | Parameter     | Data Type   | Definition                                                                        |
 | ------------- | ----------- | --------------------------------------------------------------------------------- |
 | baseUrl       | String      | This is the URL of the front end of the Magento installation. Example: 'https://www.example.com'. <br/>This can optionally contain a base path like: 'https://www.example.com/rel-5.3.2' |
 | username      | String      | This is the username to login to the Magento2 admin console.                      |
 | password      | String      | This is the password for the supplied Magento2 admin username.                    |
+| token         | String      | This is the tokem for the supplied Magento2 to access based on token.                    |
 | options       | JSON Object | **Optional** Contains any optional connection parameters.                         |
 
 ### Options
@@ -30,9 +31,14 @@ These options are allowed in the options object parameter
 
 ### Example, create magento-client
 ```
-const Magento = require('magento2-client');
+const Magento = require('magento2-client-nodejs');
 
 var magento = new Magento('https://www.example.com', 'username', 'password', {version: "v1", rejectUnauthorized: true});
+```
+```
+const Magento = require('magento2-client-nodejs');
+
+var magento = Magento.withToken('https://www.example.com', 'access token', {version: "v1", rejectUnauthorized: true});
 ```
 
 Magento API documentation:  [http://devdocs.magento.com/guides/v2.0/rest/list.html](http://devdocs.magento.com/guides/v2.0/rest/list.html).
@@ -72,7 +78,7 @@ magento.request('GET',                      //method
                 '/V1/orders',               //url
                 {                           //urlParams
                   'searchCriteria[pageSize]': 10,
-                  'searchCriteria[currentPage]': 1 
+                  'searchCriteria[currentPage]': 1
                 },
                 {},                         //data
                 function(err, data) {       //callback
@@ -89,10 +95,10 @@ magento.request('GET',                    //method
                 '/V1/orders',             //url
                 {                         //urlParams
                   'searchCriteria[pageSize]': 10,
-                  'searchCriteria[currentPage]': 1 
-                }, 
+                  'searchCriteria[currentPage]': 1
+                },
                 {})                       //data
-  .then((data) => { 
+  .then((data) => {
     console.log('orders = ' + JSON.stringify(data, null, 2));
   })
   .catch((err) => {
@@ -104,10 +110,10 @@ magento.request('GET',                    //method
                 '/V1/products',           //url
                 {                         //urlParams
                   'searchCriteria[pageSize]': 10,
-                  'searchCriteria[currentPage]': 1 
-                }, 
+                  'searchCriteria[currentPage]': 1
+                },
                 {})                       //data
-  .then((data) => { 
+  .then((data) => {
     console.log('products = ' + JSON.stringify(data, null, 2));
   })
   .catch((err) => {
@@ -129,4 +135,3 @@ var magento = new Magento("https://www.example.com", "username", "password", {"o
 ```
 let baseUrl = magento.getBaseUrl();
 ```
-

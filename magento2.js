@@ -248,6 +248,7 @@ Magento2.prototype.request = function(method, url, urlParams, data, callback) {
             let errResponse = response;
             try {
               errResponse = {
+                status: res.statusCode,
                 message: JSON.parse(response).message
               };
 
@@ -290,12 +291,14 @@ Magento2.prototype.request = function(method, url, urlParams, data, callback) {
             let response = '';
             res.on('data', function(chunk) {
               response += chunk;
-            });
-            res.on('end', function() {
+            }).on('end', function() {
               if (res.statusCode === 200) {
                 resolve(JSON.parse(response));
               } else {
-                reject(response.message);
+                reject({
+                  status: res.statusCode,
+                  message: JSON.parse(response).message
+                });
               }
             });
           });
@@ -308,9 +311,9 @@ Magento2.prototype.request = function(method, url, urlParams, data, callback) {
           req.end();
         });
       })
-      .catch(err => {
-        console.log(err);
-      });
+      // .catch(err => {
+      //   console.log(err);
+      // });
   }
 };
 
